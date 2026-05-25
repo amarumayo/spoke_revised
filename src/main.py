@@ -1,4 +1,4 @@
-from ui import App
+from ui2 import App
 def main():
     app = App()
     app.mainloop()
