@@ -1,11 +1,16 @@
 import tkinter as tk
 from tkinter import ttk
+from components import Hub
+from validators import *
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
+        
+        self.hub = Hub()
+                
         self.title("Spoke Calculator")
-        self.geometry("800x600")
+        self.geometry("500x600")
 
         # Main form frame
         self.form = ttk.Frame(self)
@@ -24,10 +29,16 @@ class App(tk.Tk):
         )
         
         # HUB COLUMN (col 0)
-        self.field_lfo = InputField(self.form, "Left Flange Offset:")
+        self.field_lfo = InputField(
+            self.form, label="Left Flange Offset:", 
+            validators=[is_required, is_numeric, is_positive]
+        )
         self.field_lfo.grid(row=1, column=0, sticky="ew", padx=5, pady=5)
 
-        self.field_rfo = InputField(self.form, "Right Flange Offset:")
+        self.field_rfo = InputField(
+            self.form, label="Right Flange Offset:",
+            validators=[is_required, is_numeric, is_positive]
+        )    
         self.field_rfo.grid(row=2, column=0, sticky="ew", padx=5, pady=5)
 
         self.field_old = InputField(self.form, "lock nut to lock nut:")
@@ -42,9 +53,6 @@ class App(tk.Tk):
         self.field_shd = InputField(self.form, "Spoke Hole Diameter:")
         self.field_shd.grid(row=6, column=0, sticky="ew", padx=5, pady=5)
 
-        
-
-
         # RIM COLUMN (col 1)
         self.field_erd = InputField(self.form, "Effective Rim Diameter:")
         self.field_erd.grid(row=1, column=1, sticky="ew", padx=5, pady=5)
@@ -55,37 +63,66 @@ class App(tk.Tk):
         self.field_crosses = InputField(self.form, "Number of Crosses:")
         self.field_crosses.grid(row=3, column=1, sticky="ew", padx=5, pady=5)
 
-        
-
         # Submit button
         self.submit_btn = ttk.Button(self, text="Submit", command=self.on_submit)
         self.submit_btn.pack(pady=10)
 
         # Results box
         self.results = tk.Text(self, height=10)
+        self.results.tag_config("error", foreground="red") # red text for errors
         self.results.pack(fill="both", expand=True, padx=20, pady=10)
 
     def on_submit(self):
-        # Example calculation
-        lfo = self.field_lfo.get()
-        rfo = self.field_rfo.get()
-        old = self.field_old.get()
+        self.results.delete("1.0", "end")
+        fields = [
+            ("Left Flange Offset", self.field_lfo),
+            ("Right Flange Offset", self.field_rfo)
+        ]
 
-        result = f"LFO={lfo}, RFO={rfo}, OLD={old}\n"
-        self.results.insert("end", result)
+        errors = []
+        for name, field in fields:
+            if not field.is_valid():
+                field.mark_invalid()
+                errors.append(f"{name} must be a positive number.")
+            else:
+                field.mark_valid()
+
+        if errors:
+            self.results.insert("end", "Validation failed:\n" + "\n".join(errors) + "\n", "error")
+            return
+
+        self.results.insert("end", "success", "error")          
+        
 
 
 class InputField(ttk.Frame):
-    def __init__(self, parent, label, **kwargs):
+    def __init__(self, parent, label, validators=None, **kwargs):
         super().__init__(parent)
 
         self.label = ttk.Label(self, text=label, width=20)
         self.label.grid(row=0, column=0, sticky="w")
-
         self.entry = ttk.Entry(self, **kwargs)
         self.entry.grid(row=0, column=1, sticky="ew")
 
-        self.columnconfigure(1, weight=1)
+        # for validation X
+        self.icon = ttk.Label(self, text="", foreground="red")
+        self.icon.grid(row=0, column=2, padx=5)
 
-    def get(self):
+        self.columnconfigure(1, weight=1)
+        self.validators = validators or []
+
+    def is_valid(self) -> bool:
+        value = self.get()
+        for func in self.validators:
+            if not func(value):
+                return False
+        return True
+        
+    def get(self) -> str:
         return self.entry.get()
+
+    def mark_invalid(self):
+        self.icon.config(text="❌")
+
+    def mark_valid(self):
+        self.icon.config(text="✔️", foreground="green")
