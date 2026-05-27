@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from components import Hub, Wheel
+from components import Hub, Rim, Wheel
 from validators import *
 
 class App(tk.Tk):
@@ -8,7 +8,8 @@ class App(tk.Tk):
         super().__init__()
         
         self.hub = Hub()
-        self.wheel = Wheel(self.hub)
+        self.rim = Rim()
+        self.wheel = Wheel(hub=self.hub, rim=self.rim)
                 
         self.title("Spoke Calculator")
         self.geometry("500x600")
@@ -31,38 +32,62 @@ class App(tk.Tk):
         
         # HUB COLUMN (col 0)
         self.field_lfo = InputField(
-            self.form, label="Left Flange Offset:", key="lfo",
+            self.form, label="Left Flange Offset:", key="lfo", target="hub",
             validators=[is_required, is_numeric, is_positive]
         )
         self.field_lfo.grid(row=1, column=0, sticky="ew", padx=5, pady=5)
 
         self.field_rfo = InputField(
-            self.form, label="Right Flange Offset:", key="rfo",
+            self.form, label="Right Flange Offset:", key="rfo", target="hub",
             validators=[is_required, is_numeric, is_positive]
         )    
         self.field_rfo.grid(row=2, column=0, sticky="ew", padx=5, pady=5)
 
-        self.field_old = InputField(self.form, "lock nut to lock nut:")
+        self.field_old = InputField(
+            self.form, label="Lock Nut to Lock Nut:", key="old", target="hub",
+            validators=[is_required, is_numeric, is_positive]
+        )
         self.field_old.grid(row=3, column=0, sticky="ew", padx=5, pady=5)
 
-        self.field_dl = InputField(self.form, "L. Spoke Circle Diameter:")
+        self.field_dl = InputField(
+            self.form, label="L. Spoke Circle Diameter:", key="dl", target="hub",
+            validators=[is_required, is_numeric, is_positive]
+
+        )
         self.field_dl.grid(row=4, column=0, sticky="ew", padx=5, pady=5)
 
-        self.field_rl = InputField(self.form, "R. Spoke Circle Diameter:")
-        self.field_rl.grid(row=5, column=0, sticky="ew", padx=5, pady=5)
+        self.field_dr = InputField(
+            self.form, label="R. Spoke Circle Diameter:", key="dr", target="hub",
+            validators=[is_required, is_numeric, is_positive]
 
-        self.field_shd = InputField(self.form, "Spoke Hole Diameter:")
+        )
+        self.field_dr.grid(row=5, column=0, sticky="ew", padx=5, pady=5)
+
+        self.field_shd = InputField(
+            self.form, label="Spoke Hole Diameter:", key="shd", target="hub",
+            validators=[is_required, is_numeric, is_positive]
+
+        )
         self.field_shd.grid(row=6, column=0, sticky="ew", padx=5, pady=5)
 
         # RIM COLUMN (col 1)
-        self.field_erd = InputField(self.form, "Effective Rim Diameter:")
+        self.field_erd = InputField(
+            self.form, label="Effective Rim Diameter:", key="erd", target="rim",
+            validators=[is_required, is_numeric, is_positive]
+        )
         self.field_erd.grid(row=1, column=1, sticky="ew", padx=5, pady=5)
 
-        self.field_num_spokes = InputField(self.form, "Number of Spokes:")
+        self.field_num_spokes = InputField(
+            self.form, label="Number of Spokes:", key="num_spokes", target="rim",
+            validators=[is_required, is_numeric, is_positive]
+        )
         self.field_num_spokes.grid(row=2, column=1, sticky="ew", padx=5, pady=5)
 
-        self.field_crosses = InputField(self.form, "Number of Crosses:")
-        self.field_crosses.grid(row=3, column=1, sticky="ew", padx=5, pady=5)
+        self.field_num_crosses = InputField(
+            self.form, label="Number of Crosses:", key="num_crosses", target="rim",
+            validators=[is_required, is_numeric, is_positive]
+        )
+        self.field_num_crosses.grid(row=3, column=1, sticky="ew", padx=5, pady=5)
 
         # Submit button
         self.submit_btn = ttk.Button(self, text="Submit", command=self.on_submit)
@@ -78,7 +103,14 @@ class App(tk.Tk):
 
         fields = [
             ("Left Flange Offset", self.field_lfo),
-            ("Right Flange Offset", self.field_rfo)
+            ("Right Flange Offset", self.field_rfo),
+            ("Lock Nut to Lock Nut", self.field_old),
+            ("L. Spoke Circle Diameter", self.field_dl),
+            ("R. Spoke Circle Diameter", self.field_dr),
+            ("Spoke Hole Diameter", self.field_shd),
+            ("Effective Rim diameter", self.field_erd),
+            ("Number of Spokes", self.field_num_spokes),
+            ("Number of Crosses", self.field_num_crosses)
         ]
 
         errors = []
@@ -88,18 +120,23 @@ class App(tk.Tk):
                 errors.append(f"{name} must be a positive number.")
             else:
                 field.mark_valid()
-                # populate hub field (should be wheel)
-                setattr(self.hub, field.key, float(field.get()))                
+                
+                # populate hub or rim field 
+                target_obj = getattr(self, field.target)
+                setattr(target_obj, field.key, float(field.get()))                
 
         if errors:
             self.results.insert("end", "Validation failed:\n" + "\n".join(errors) + "\n", "error")
             return
 
         self.results.insert("end", "success", "error")
+        self.rim
+
+        self.wheel
 
 
 class InputField(ttk.Frame):
-    def __init__(self, parent, label, key=None, validators=None, **kwargs):
+    def __init__(self, parent, label, key=None, target=None, validators=None, **kwargs):
         super().__init__(parent)
 
         self.label = ttk.Label(self, text=label, width=20)
@@ -107,7 +144,9 @@ class InputField(ttk.Frame):
         self.entry = ttk.Entry(self, **kwargs)
         self.entry.grid(row=0, column=1, sticky="ew")
 
-        self.key = key  # maps to Hub or Spoke
+        # maps to Hub or Spoke
+        self.key = key  
+        self.target = target
 
 
         # for validation X

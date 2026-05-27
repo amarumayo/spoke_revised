@@ -29,23 +29,23 @@ class Hub:
         self.shd = shd
         self.osb = osb
 
-    def __repr__(self):
-        
+    def __repr__(self):        
         return f"Hub({self.lfo}, {self.rfo}, {self.old}, {self.dl}, {self.dr}, {self.shd})"
 
 
 class Rim:
     
-    def __init__(self, ERD = None, num_spokes = None, num_crosses = None):
-        self.ERD = ERD
+    def __init__(self, erd = None, num_spokes = None, num_crosses = None):
+        self.erd = erd
         self.num_spokes = num_spokes
         self.num_crosses = num_crosses
-
-    def __repr__(self):
-        
-        return f"Wheel({self.ERD}, {self.num_crosses}, {self.num_crosses})"
+    
+    def __repr__(self):        
+        return f"Rim({self.erd}, {self.num_spokes}, {self.num_crosses})"
 
 class Wheel:
-    def __init__(self, hub):
+    def __init__(self, hub, rim):
         self.hub = hub
-        self.rim = Rim()
+        self.rim = rim
+    def __repr__(self):
+        return f"Wheel(hub={self.hub!r}, rim={self.rim!r})"
