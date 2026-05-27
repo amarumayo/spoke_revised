@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from components import Hub
+from components import Hub, Wheel
 from validators import *
 
 class App(tk.Tk):
@@ -8,6 +8,7 @@ class App(tk.Tk):
         super().__init__()
         
         self.hub = Hub()
+        self.wheel = Wheel(self.hub)
                 
         self.title("Spoke Calculator")
         self.geometry("500x600")
@@ -30,13 +31,13 @@ class App(tk.Tk):
         
         # HUB COLUMN (col 0)
         self.field_lfo = InputField(
-            self.form, label="Left Flange Offset:", 
+            self.form, label="Left Flange Offset:", key="lfo",
             validators=[is_required, is_numeric, is_positive]
         )
         self.field_lfo.grid(row=1, column=0, sticky="ew", padx=5, pady=5)
 
         self.field_rfo = InputField(
-            self.form, label="Right Flange Offset:",
+            self.form, label="Right Flange Offset:", key="rfo",
             validators=[is_required, is_numeric, is_positive]
         )    
         self.field_rfo.grid(row=2, column=0, sticky="ew", padx=5, pady=5)
@@ -74,6 +75,7 @@ class App(tk.Tk):
 
     def on_submit(self):
         self.results.delete("1.0", "end")
+
         fields = [
             ("Left Flange Offset", self.field_lfo),
             ("Right Flange Offset", self.field_rfo)
@@ -86,23 +88,27 @@ class App(tk.Tk):
                 errors.append(f"{name} must be a positive number.")
             else:
                 field.mark_valid()
+                # populate hub field (should be wheel)
+                setattr(self.hub, field.key, float(field.get()))                
 
         if errors:
             self.results.insert("end", "Validation failed:\n" + "\n".join(errors) + "\n", "error")
             return
 
-        self.results.insert("end", "success", "error")          
-        
+        self.results.insert("end", "success", "error")
 
 
 class InputField(ttk.Frame):
-    def __init__(self, parent, label, validators=None, **kwargs):
+    def __init__(self, parent, label, key=None, validators=None, **kwargs):
         super().__init__(parent)
 
         self.label = ttk.Label(self, text=label, width=20)
         self.label.grid(row=0, column=0, sticky="w")
         self.entry = ttk.Entry(self, **kwargs)
         self.entry.grid(row=0, column=1, sticky="ew")
+
+        self.key = key  # maps to Hub or Spoke
+
 
         # for validation X
         self.icon = ttk.Label(self, text="", foreground="red")

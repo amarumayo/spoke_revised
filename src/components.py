@@ -44,3 +44,8 @@ class Rim:
     def __repr__(self):
         
         return f"Wheel({self.ERD}, {self.num_crosses}, {self.num_crosses})"
+
+class Wheel:
+    def __init__(self, hub):
+        self.hub = hub
+        self.rim = Rim()
