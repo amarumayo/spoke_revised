@@ -1,3 +1,4 @@
+import math
 class Hub:
     
     def __init__(
@@ -49,3 +50,21 @@ class Wheel:
         self.rim = rim
     def __repr__(self):
         return f"Wheel(hub={self.hub!r}, rim={self.rim!r})"
+
+    def make_calc(self):
+        print("hi")
+
+        R = self.rim.erd / 2
+        LH = self.hub.dl / 2
+        LF = self.hub.lfo
+        RH = self.hub.dr / 2
+        RF = self.hub.rfo
+        h = self.rim.num_spokes
+
+        ML = 2 * R * LH * math.cos((4 * math.pi * self.rim.num_crosses) / h )
+        left_length = round((math.sqrt(R**2 + LH**2 + LF**2 - ML)) - self.hub.shd / 2, 1)
+        
+        MR = 2 * R * RH * math.cos((4 * math.pi * self.rim.num_crosses) / h )
+        right_length = round((math.sqrt(R**2 + RH**2 + RF**2 - MR)) - self.hub.shd / 2, 1)
+
+        return right_length, left_length

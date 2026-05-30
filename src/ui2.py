@@ -23,10 +23,10 @@ class App(tk.Tk):
             self.form.columnconfigure(col, weight=1)        
 
         # Column headers
-        ttk.Label(self.form, text="Hub", anchor="center").grid(
+        ttk.Label(self.form, text="Hub Specs", anchor="center").grid(
             row=0, column=0, sticky="ew", pady=(0, 10)
         )
-        ttk.Label(self.form, text="Rim", anchor="center").grid(
+        ttk.Label(self.form, text="Rim Specs", anchor="center").grid(
             row=0, column=1, sticky="ew", pady=(0, 10)
         )
         
@@ -89,14 +89,24 @@ class App(tk.Tk):
         )
         self.field_num_crosses.grid(row=3, column=1, sticky="ew", padx=5, pady=5)
 
+        # button bar
+        self.button_bar = ttk.Frame(self)
+        self.button_bar.pack(pady=10)
+        
         # Submit button
-        self.submit_btn = ttk.Button(self, text="Submit", command=self.on_submit)
-        self.submit_btn.pack(pady=10)
+        self.submit_btn = ttk.Button(self.button_bar, text="Submit", command=self.on_submit)
+        self.submit_btn.grid(row=0, column=0)
+
+        self.clear_button = ttk.Button(self.button_bar, text="Clear", command=self.on_clear)
+        self.clear_button.grid(row=0, column=1, pady=10)
 
         # Results box
         self.results = tk.Text(self, height=10)
         self.results.tag_config("error", foreground="red") # red text for errors
         self.results.pack(fill="both", expand=True, padx=20, pady=10)
+
+    def on_clear(self):
+        self.results.insert("end", "clear button pressed!")
 
     def on_submit(self):
         self.results.delete("1.0", "end")
@@ -129,10 +139,11 @@ class App(tk.Tk):
             self.results.insert("end", "Validation failed:\n" + "\n".join(errors) + "\n", "error")
             return
 
-        self.results.insert("end", "success", "error")
-        self.rim
+        # TODO - make the calculation
+        right, left = self.wheel.make_calc()
+        self.results.insert("end", f"Right Spoke Length: {right}\nLeft Spoke Length: {left}")
 
-        self.wheel
+        print("here")
 
 
 class InputField(ttk.Frame):
