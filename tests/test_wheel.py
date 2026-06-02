@@ -1,0 +1,28 @@
+import math
+import pytest
+from src.hub import Hub
+from src.rim import Rim
+from src.wheel import Wheel
+
+def test_make_calc_does_correct_calc():
+    hub = Hub(lfo=35, rfo=20, old=100, dl=58, dr=58, shd=2.5, osb=0)
+    rim = Rim(erd=600, num_spokes=32, num_crosses=3)
+    wheel = Wheel(hub=hub, rim=rim)
+    right, left = wheel.make_calc()
+
+    assert math.isclose(right, 289.6, abs_tol=0.1)
+    assert math.isclose(left, 291.0, abs_tol=0.1)
+
+def test_make_calc_division_by_zero():
+
+    rim = Rim(erd=600, num_spokes=1, num_crosses=3)
+    rim.num_spokes = 0  # force invalid state since Rim() won't allow it
+
+    hub = Hub(lfo=30, rfo=30, old=100, dl=60, dr=60, shd=2.5, osb=0)
+
+    wheel = Wheel(hub, rim)
+
+    with pytest.raises(ZeroDivisionError):
+        wheel.make_calc()
+
+

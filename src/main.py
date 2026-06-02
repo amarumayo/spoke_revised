@@ -1,4 +1,5 @@
-from ui import App
+from src.ui import App
+
 def main():
     app = App()
     app.mainloop()
