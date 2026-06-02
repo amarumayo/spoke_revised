@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
-from components import Hub, Rim, Wheel
 from validators import *
+from rim import Rim
+from wheel import Wheel
+from hub import Hub
 
 class App(tk.Tk):
     def __init__(self):
@@ -50,14 +52,14 @@ class App(tk.Tk):
         self.field_old.grid(row=3, column=0, sticky="ew", padx=5, pady=5)
 
         self.field_dl = InputField(
-            self.form, label="L. Spoke Circle Diameter:", key="dl", target="hub",
+            self.form, label="Left Spoke Circle Diameter:", key="dl", target="hub",
             validators=[is_required, is_positive]
 
         )
         self.field_dl.grid(row=4, column=0, sticky="ew", padx=5, pady=5)
 
         self.field_dr = InputField(
-            self.form, label="R. Spoke Circle Diameter:", key="dr", target="hub",
+            self.form, label="Right Spoke Circle Diameter:", key="dr", target="hub",
             validators=[is_required, is_positive]
 
         )
@@ -94,8 +96,8 @@ class App(tk.Tk):
             ("Left Flange Offset", self.field_lfo),
             ("Right Flange Offset", self.field_rfo),
             ("Lock Nut to Lock Nut", self.field_old),
-            ("L. Spoke Circle Diameter", self.field_dl),
-            ("R. Spoke Circle Diameter", self.field_dr),
+            ("Left Spoke Circle Diameter", self.field_dl),
+            ("Right Spoke Circle Diameter", self.field_dr),
             ("Spoke Hole Diameter", self.field_shd),
             ("Effective Rim diameter", self.field_erd),
             ("Number of Spokes", self.field_num_spokes),
@@ -107,30 +109,54 @@ class App(tk.Tk):
         self.button_bar.pack(pady=10)
         
         # Submit button
-        self.calculate_btn = ttk.Button(self.button_bar, text="Calculate", command=self.on_calculate)
+        self.calculate_btn = ttk.Button(self.button_bar, text="Calculate", command=self.on_calculate_button_press)
         self.calculate_btn.grid(row=0, column=0)
 
-        self.clear_button = ttk.Button(self.button_bar, text="Clear", command=self.on_clear)
+        self.clear_button = ttk.Button(self.button_bar, text="Clear", command=self.on_clear_button_press)
         self.clear_button.grid(row=0, column=1, pady=10)
 
         # Results box
         self.results = tk.Text(self, height=10)
-        self.results.tag_config("error", foreground="red") # red text for errors
+        self.results.tag_config("error") 
         self.results.pack(fill="both", expand=True, padx=20, pady=10)
 
-    def on_clear(self):
-        self.results.insert("end", "clear button pressed!")
+    def on_calculate_button_press(self):
+        self._clear_results_box()
 
+        # validate inputs
+        all_valid = True
+
+        for name, field in self.fields:
+            if not field.is_valid():
+                field.mark_invalid()
+                all_valid = False
+            else:
+                field.mark_valid()
+                self._poplate_model(field)     
+
+        if not all_valid:
+            return                            
+
+        # do the calc
+        right, left = self.wheel.make_calc()
+
+        self._show_results(right, left)
+
+    def on_clear_button_press(self):
+
+        # clear entry boxes
         for name, field in self.fields:
             field.clear()
         
-        self.results.delete("1.0", "end")
+        # clear results box
+        self._clear_results_box()
 
+        # reset components
         self.hub = Hub()
         self.rim = Rim()
         self.wheel = Wheel(self.hub, self.rim)
 
-    def poplate_model(self, field):
+    def _poplate_model(self, field):
         """
         Assign the validated numeric value from an InputField to the
         appropriate model object (Hub or Rim).
@@ -142,28 +168,19 @@ class App(tk.Tk):
         """
         target_obj = getattr(self, field.target)
         setattr(target_obj, field.key, float(field.get())) 
-
-    def on_calculate(self):
+    
+    def _clear_results_box(self):
         self.results.delete("1.0", "end")
+    
+    def _show_results(self, left, right):
+        self.results.insert(
+            "end", 
+            f"Left Spoke Length: {left}\nRight Spoke Length: {right}"
+        )    
 
-        errors = []
-        for name, field in self.fields:
-            if not field.is_valid():
-                field.mark_invalid()
-                errors.append(f"{name} must be a positive number.")
-            else:
-                field.mark_valid()
-                self.poplate_model(field)                                 
-
-        if errors:
-            self.results.insert("end", "\n".join(errors) + "\n", "error")
-            return
-
-        right, left = self.wheel.make_calc()
-        self.results.insert("end", f"Right Spoke Length: {right}\nLeft Spoke Length: {left}")
-
-
+    
 class InputField(ttk.Frame):
+
     def __init__(self, parent, label, key, target, 
     validators=None, field_type="entry", values=None, **kwargs
 ):
@@ -184,14 +201,15 @@ class InputField(ttk.Frame):
         elif field_type == "combo":
             self.entry = ttk.Combobox(self, width = 12, values=values, state="readonly")
         self.entry.grid(row=0, column=1, sticky="ew")
-        
-        # for validation X
-        self.icon = ttk.Label(self, text="", foreground="red", width=4)
-        self.icon.grid(row=0, column=2, padx=5)
 
+        # for errors
+        self.error_label = ttk.Label(self, text="", foreground="red", font=("TkDefaultFont", 8))
+        self.error_label.grid(row=1, column=1, columnspan=3, sticky="w", padx=5)
+        
         self.columnconfigure(1, weight=1)
         self.validators = validators or []
 
+    # public ----
     def is_valid(self) -> bool:
         value = self.get()
         for func in self.validators:
@@ -201,20 +219,25 @@ class InputField(ttk.Frame):
         
     def get(self) -> str:
         return self.entry.get()
-
-    def mark_invalid(self):
-        self.icon.config(text="❌")
+    
+    def mark_invalid(self, message="Invalid value"):
+        self._set_error_label(message)
 
     def mark_valid(self):
-        self.icon.config(text="✔️", foreground="green")
+        self._set_error_label("")
 
     def clear(self):
         if self.field_type == "entry":
             self.entry.delete(0, "end")
         if self.field_type == "combo":
             self.entry.set("")
+        self._set_error_label("")
 
-        # clear validation icon
-        self.icon.config(text="")
+    # private ----    
+    def _set_error_label(self, message=""):
+        self.error_label.config(text=message)
+
+
+    
 
         
