@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
-from validators import *
-from rim import Rim
-from wheel import Wheel
-from hub import Hub
+from src.validators import *
+from src.rim import Rim
+from src.wheel import Wheel
+from src.hub import Hub
 
 class App(tk.Tk):
     def __init__(self):
