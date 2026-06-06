@@ -1,14 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
-from src.validators import *
-from src.rim import Rim
-from src.wheel import Wheel
-from src.hub import Hub
+from spoke.validators import *
+from spoke.rim import Rim
+from spoke.wheel import Wheel
+from spoke.hub import Hub
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        
+                
         self.hub = Hub()
         self.rim = Rim()
         self.wheel = Wheel(hub=self.hub, rim=self.rim)

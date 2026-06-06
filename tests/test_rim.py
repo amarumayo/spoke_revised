@@ -1,5 +1,5 @@
 import pytest
-from src.rim import Rim
+from spoke.rim import Rim
 
 def test_rim_does_not_accept_negative_erd():
     with pytest.raises(ValueError):

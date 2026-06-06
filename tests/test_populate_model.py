@@ -1,5 +1,5 @@
 import pytest
-from src.ui import App
+from spoke.ui import App
 
 class FakeField:
     def __init__(self, target, key, value):

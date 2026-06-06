@@ -1,8 +1,8 @@
 import math
 import pytest
-from src.hub import Hub
-from src.rim import Rim
-from src.wheel import Wheel
+from spoke.hub import Hub
+from spoke.rim import Rim
+from spoke.wheel import Wheel
 
 def test_make_calc_does_correct_calc():
     hub = Hub(lfo=35, rfo=20, old=100, dl=58, dr=58, shd=2.5, osb=0)

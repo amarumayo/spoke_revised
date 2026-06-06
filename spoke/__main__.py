@@ -1,4 +1,4 @@
-from src.ui import App
+from spoke.ui import App
 
 def main():
     app = App()

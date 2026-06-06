@@ -1,5 +1,5 @@
 import pytest
-from src.hub import Hub
+from spoke.hub import Hub
 
 def test_Hub_does_not_accept_negative_lfo():
     with pytest.raises(ValueError):
