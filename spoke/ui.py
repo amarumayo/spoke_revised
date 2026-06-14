@@ -5,10 +5,13 @@ from spoke.rim import Rim
 from spoke.wheel import Wheel
 from spoke.hub import Hub
 
-class App(tk.Tk):
-    def __init__(self):
-        super().__init__()
-                
+class App(tk.Toplevel):
+    def __init__(self, master, var_from_popup):
+        super().__init__(master)
+
+        self.var_from_popup = var_from_popup
+        print(var_from_popup)
+                        
         self.hub = Hub()
         self.rim = Rim()
         self.wheel = Wheel(hub=self.hub, rim=self.rim)
